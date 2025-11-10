@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>파티 아이템 분배 시스템</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .remove-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+
+        .remove-btn:hover {
+            background: #ee5a6f;
+        }
+
+        .add-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 10px;
+            transition: background 0.3s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .draw-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 20px 60px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin: 30px auto;
+            display: block;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+        }
+
+        .draw-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(245, 87, 108, 0.6);
+        }
+
+        .draw-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .results {
+            margin-top: 40px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .result-table th {
+            padding: 15px;
+            text-align: left;
+            font-size: 1.1em;
+        }
+
+        .result-table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .result-table tbody tr {
+            transition: background 0.3s;
+        }
+
+        .result-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .result-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .slot-animation {
+            display: inline-block;
+            animation: slot 0.5s ease-in-out;
+        }
+
+        @keyframes slot {
+            0%, 100% { transform: translateY(0); }
+            25% { transform: translateY(-10px); }
+            50% { transform: translateY(10px); }
+            75% { transform: translateY(-5px); }
+        }
+
+        .warning {
+            color: #ff4757;
+            font-size: 0.9em;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .warning.show {
+            display: block;
+        }
+
+        .counter {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .reset-btn {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-left: 10px;
+            transition: background 0.3s;
+        }
+
+        .reset-btn:hover {
+            background: #7f8c8d;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 파티 아이템 분배 시스템</h1>
+
+        <!-- 참여 인원 입력 섹션 -->
+        <div class="section">
+            <div class="section-title">참여 인원 (최대 50명)</div>
+            <div id="participants-container">
+                <div class="input-group">
+                    <input type="text" placeholder="참여자 이름 입력" class="participant-input">
+                    <button class="remove-btn" onclick="removeInput(this)">삭제</button>
+                </div>
+            </div>
+            <button class="add-btn" onclick="addParticipant()">➕ 인원 추가</button>
+            <div class="counter" id="participant-counter">현재 인원: 1명</div>
+            <div class="warning" id="participant-warning">⚠️ 최대 50명까지만 추가할 수 있습니다.</div>
+        </div>
+
+        <!-- 아이템 입력 섹션 -->
+        <div class="section">
+            <div class="section-title">아이템 목록</div>
+            <div id="items-container">
+                <div class="input-group">
+                    <input type="text" placeholder="아이템 이름 입력" class="item-input">
+                    <button class="remove-btn" onclick="removeInput(this)">삭제</button>
+                </div>
+            </div>
+            <button class="add-btn" onclick="addItem()">➕ 아이템 추가</button>
+            <div class="counter" id="item-counter">현재 아이템: 1개</div>
+            <div class="warning" id="item-warning">⚠️ 최대 50개까지만 추가할 수 있습니다.</div>
+        </div>
+
+        <!-- 추첨 버튼 -->
+        <div class="button-group">
+            <button class="draw-btn" onclick="drawLots()">🎲 랜덤 추첨 시작!</button>
+            <button class="reset-btn" onclick="resetAll()">🔄 초기화</button>
+        </div>
+
+        <!-- 결과 표시 섹션 -->
+        <div class="results" id="results">
+            <div class="section-title">🎉 추첨 결과</div>
+            <table class="result-table">
+                <thead>
+                    <tr>
+                        <th>순번</th>
+                        <th>참여자</th>
+                        <th>획득 아이템</th>
+                    </tr>
+                </thead>
+                <tbody id="result-body">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let participantCount = 1;
+        let itemCount = 1;
+
+        function addParticipant() {
+            if (participantCount >= 50) {
+                document.getElementById('participant-warning').classList.add('show');
+                setTimeout(() => {
+                    document.getElementById('participant-warning').classList.remove('show');
+                }, 3000);
+                return;
+            }
+
+            const container = document.getElementById('participants-container');
+            const inputGroup = document.createElement('div');
+            inputGroup.className = 'input-group';
+            inputGroup.innerHTML = `
+                <input type="text" placeholder="참여자 이름 입력" class="participant-input">
+                <button class="remove-btn" onclick="removeInput(this)">삭제</button>
+            `;
+            container.appendChild(inputGroup);
+            participantCount++;
+            updateCounter('participant');
+        }
+
+        function addItem() {
+            if (itemCount >= 50) {
+                document.getElementById('item-warning').classList.add('show');
+                setTimeout(() => {
+                    document.getElementById('item-warning').classList.remove('show');
+                }, 3000);
+                return;
+            }
+
+            const container = document.getElementById('items-container');
+            const inputGroup = document.createElement('div');
+            inputGroup.className = 'input-group';
+            inputGroup.innerHTML = `
+                <input type="text" placeholder="아이템 이름 입력" class="item-input">
+                <button class="remove-btn" onclick="removeInput(this)">삭제</button>
+            `;
+            container.appendChild(inputGroup);
+            itemCount++;
+            updateCounter('item');
+        }
+
+        function removeInput(button) {
+            const inputGroup = button.parentElement;
+            const container = inputGroup.parentElement;
+            
+            // 최소 1개는 남겨두기
+            if (container.children.length > 1) {
+                inputGroup.remove();
+                
+                if (container.id === 'participants-container') {
+                    participantCount--;
+                    updateCounter('participant');
+                } else {
+                    itemCount--;
+                    updateCounter('item');
+                }
+            }
+        }
+
+        function updateCounter(type) {
+            if (type === 'participant') {
+                document.getElementById('participant-counter').textContent = `현재 인원: ${participantCount}명`;
+            } else {
+                document.getElementById('item-counter').textContent = `현재 아이템: ${itemCount}개`;
+            }
+        }
+
+        function drawLots() {
+            // 참여자 데이터 수집
+            const participantInputs = document.querySelectorAll('.participant-input');
+            const participants = Array.from(participantInputs)
+                .map(input => input.value.trim())
+                .filter(name => name !== '');
+
+            // 아이템 데이터 수집
+            const itemInputs = document.querySelectorAll('.item-input');
+            const items = Array.from(itemInputs)
+                .map(input => input.value.trim())
+                .filter(name => name !== '');
+
+            // 유효성 검사
+            if (participants.length === 0) {
+                alert('참여자를 최소 1명 이상 입력해주세요!');
+                return;
+            }
+
+            if (items.length === 0) {
+                alert('아이템을 최소 1개 이상 입력해주세요!');
+                return;
+            }
+
+            // 아이템 배열 복사 및 셔플
+            let shuffledItems = [...items];
+            
+            // 참여자가 아이템보다 많으면 아이템 반복
+            while (shuffledItems.length < participants.length) {
+                shuffledItems = [...shuffledItems, ...items];
+            }
+
+            // Fisher-Yates 셔플 알고리즘
+            for (let i = shuffledItems.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledItems[i], shuffledItems[j]] = [shuffledItems[j], shuffledItems[i]];
+            }
+
+            // 결과 표시
+            const resultBody = document.getElementById('result-body');
+            resultBody.innerHTML = '';
+
+            participants.forEach((participant, index) => {
+                const row = document.createElement('tr');
+                const item = shuffledItems[index];
+                
+                setTimeout(() => {
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${participant}</td>
+                        <td class="slot-animation">${item}</td>
+                    `;
+                    resultBody.appendChild(row);
+                }, index * 200); // 각 행이 0.2초 간격으로 나타남
+            });
+
+            // 결과 섹션 표시
+            setTimeout(() => {
+                document.getElementById('results').classList.add('show');
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+            }, participants.length * 200);
+        }
+
+        function resetAll() {
+            if (confirm('모든 입력 내용을 초기화하시겠습니까?')) {
+                // 참여자 초기화
+                document.getElementById('participants-container').innerHTML = `
+                    <div class="input-group">
+                        <input type="text" placeholder="참여자 이름 입력" class="participant-input">
+                        <button class="remove-btn" onclick="removeInput(this)">삭제</button>
+                    </div>
+                `;
+                participantCount = 1;
+
+                // 아이템 초기화
+                document.getElementById('items-container').innerHTML = `
+                    <div class="input-group">
+                        <input type="text" placeholder="아이템 이름 입력" class="item-input">
+                        <button class="remove-btn" onclick="removeInput(this)">삭제</button>
+                    </div>
+                `;
+                itemCount = 1;
+
+                // 결과 숨기기
+                document.getElementById('results').classList.remove('show');
+                document.getElementById('result-body').innerHTML = '';
+
+                // 카운터 업데이트
+                updateCounter('participant');
+                updateCounter('item');
+            }
+        }
+    </script>
+</body>
+</html>
